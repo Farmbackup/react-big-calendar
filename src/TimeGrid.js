@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types'
 import clsx from 'clsx'
-import * as animationFrame from 'dom-helpers/animationFrame'
+import raf from 'dom-helpers/util/requestAnimationFrame'
 import React, { Component } from 'react'
 import { findDOMNode } from 'react-dom'
 import memoize from 'memoize-one'
@@ -9,7 +9,7 @@ import * as dates from './utils/dates'
 import DayColumn from './DayColumn'
 import TimeGutter from './TimeGutter'
 
-import getWidth from 'dom-helpers/width'
+import getWidth from 'dom-helpers/query/width'
 import TimeGridHeader from './TimeGridHeader'
 import { notify } from './utils/helpers'
 import { inRange, sortEvents } from './utils/eventLevels'
@@ -50,14 +50,14 @@ export default class TimeGrid extends Component {
   }
 
   handleResize = () => {
-    animationFrame.cancel(this.rafHandle)
-    this.rafHandle = animationFrame.request(this.checkOverflow)
+    raf.cancel(this.rafHandle)
+    this.rafHandle = raf(this.checkOverflow)
   }
 
   componentWillUnmount() {
     window.removeEventListener('resize', this.handleResize)
 
-    animationFrame.cancel(this.rafHandle)
+    raf.cancel(this.rafHandle)
 
     if (this.measureGutterAnimationFrameRequest) {
       window.cancelAnimationFrame(this.measureGutterAnimationFrameRequest)

@@ -1,9 +1,8 @@
 import PropTypes from 'prop-types'
 import React, { useRef, useEffect } from 'react'
-import addClass from 'dom-helpers/addClass'
-import removeClass from 'dom-helpers/removeClass'
-import getWidth from 'dom-helpers/width'
-import scrollbarSize from 'dom-helpers/scrollbarSize'
+import classes from 'dom-helpers/class'
+import getWidth from 'dom-helpers/query/width'
+import scrollbarSize from 'dom-helpers/util/scrollbarSize'
 
 import * as dates from './utils/dates'
 import { navigate } from './utils/constants'
@@ -135,10 +134,10 @@ function Agenda({
     }
 
     if (isOverflowing) {
-      addClass(header, 'rbc-header-overflowing')
+      classes.addClass(header, 'rbc-header-overflowing')
       header.style.marginRight = scrollbarSize() + 'px'
     } else {
-      removeClass(header, 'rbc-header-overflowing')
+      classes.removeClass(header, 'rbc-header-overflowing')
     }
   }
 

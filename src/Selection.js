@@ -1,9 +1,14 @@
-import contains from 'dom-helpers/contains'
-import closest from 'dom-helpers/closest'
-import listen from 'dom-helpers/listen'
+import contains from 'dom-helpers/query/contains'
+import closest from 'dom-helpers/query/closest'
+import events from 'dom-helpers/events'
 
 function addEventListener(type, handler, target = document) {
-  return listen(target, type, handler, { passive: false })
+  events.on(target, type, handler, { passive: false })
+  return {
+    remove() {
+      events.off(target, type, handler)
+    },
+  }
 }
 
 function isOverContainer(container, x, y) {
@@ -57,14 +62,14 @@ class Selection {
 
     // Fixes an iOS 10 bug where scrolling could not be prevented on the window.
     // https://github.com/metafizzy/flickity/issues/457#issuecomment-254501356
-    this._removeTouchMoveWindowListener = addEventListener(
+    this._onTouchMoveWindowListener = addEventListener(
       'touchmove',
       () => {},
       window
     )
-    this._removeKeyDownListener = addEventListener('keydown', this._keyListener)
-    this._removeKeyUpListener = addEventListener('keyup', this._keyListener)
-    this._removeDropFromOutsideListener = addEventListener(
+    this._onKeyDownListener = addEventListener('keydown', this._keyListener)
+    this._onKeyUpListener = addEventListener('keyup', this._keyListener)
+    this._onDropFromOutsideListener = addEventListener(
       'drop',
       this._dropFromOutsideListener
     )
@@ -100,14 +105,14 @@ class Selection {
   teardown() {
     this.isDetached = true
     this.listeners = Object.create(null)
-    this._removeTouchMoveWindowListener && this._removeTouchMoveWindowListener()
-    this._removeInitialEventListener && this._removeInitialEventListener()
-    this._removeEndListener && this._removeEndListener()
-    this._onEscListener && this._onEscListener()
-    this._removeMoveListener && this._removeMoveListener()
-    this._removeKeyUpListener && this._removeKeyUpListener()
-    this._removeKeyDownListener && this._removeKeyDownListener()
-    this._removeDropFromOutsideListener && this._removeDropFromOutsideListener()
+    this._onTouchMoveWindowListener && this._onTouchMoveWindowListener.remove()
+    this._onInitialEventListener && this._onInitialEventListener.remove()
+    this._onEndListener && this._onEndListener.remove()
+    this._onEscListener && this._onEscListener.remove()
+    this._onMoveListener && this._onMoveListener.remove()
+    this._onKeyUpListener && this._onKeyUpListener.remove()
+    this._onKeyDownListener && this._onKeyDownListener.remove()
+    this._onDropFromOutsideListener && this._onDragOverfromOutisde.remove()
   }
 
   isSelected(node) {
@@ -131,68 +136,69 @@ class Selection {
   // without moving their finger for 250ms.
   _addLongPressListener(handler, initialEvent) {
     let timer = null
-    let removeTouchMoveListener = null
-    let removeTouchEndListener = null
+    let touchMoveListener = null
+    let touchEndListener = null
     const handleTouchStart = initialEvent => {
       timer = setTimeout(() => {
         cleanup()
         handler(initialEvent)
       }, this.longPressThreshold)
-      removeTouchMoveListener = addEventListener('touchmove', () => cleanup())
-      removeTouchEndListener = addEventListener('touchend', () => cleanup())
+      touchMoveListener = addEventListener('touchmove', () => cleanup())
+      touchEndListener = addEventListener('touchend', () => cleanup())
     }
-    const removeTouchStartListener = addEventListener(
-      'touchstart',
-      handleTouchStart
-    )
+    const touchStartListener = addEventListener('touchstart', handleTouchStart)
     const cleanup = () => {
       if (timer) {
         clearTimeout(timer)
       }
-      if (removeTouchMoveListener) {
-        removeTouchMoveListener()
+      if (touchMoveListener) {
+        touchMoveListener.remove()
       }
-      if (removeTouchEndListener) {
-        removeTouchEndListener()
+      if (touchEndListener) {
+        touchEndListener.remove()
       }
 
       timer = null
-      removeTouchMoveListener = null
-      removeTouchEndListener = null
+      touchMoveListener = null
+      touchEndListener = null
     }
 
     if (initialEvent) {
       handleTouchStart(initialEvent)
     }
 
-    return () => {
-      cleanup()
-      removeTouchStartListener()
+    return {
+      remove() {
+        cleanup()
+        touchStartListener.remove()
+      },
     }
   }
 
   // Listen for mousedown and touchstart events. When one is received, disable the other and setup
   // future event handling based on the type of event.
   _addInitialEventListener() {
-    const removeMouseDownListener = addEventListener('mousedown', e => {
-      this._removeInitialEventListener()
+    const mouseDownListener = addEventListener('mousedown', e => {
+      this._onInitialEventListener.remove()
       this._handleInitialEvent(e)
-      this._removeInitialEventListener = addEventListener(
+      this._onInitialEventListener = addEventListener(
         'mousedown',
         this._handleInitialEvent
       )
     })
-    const removeTouchStartListener = addEventListener('touchstart', e => {
-      this._removeInitialEventListener()
-      this._removeInitialEventListener = this._addLongPressListener(
+    const touchStartListener = addEventListener('touchstart', e => {
+      this._onInitialEventListener.remove()
+      this._onInitialEventListener = this._addLongPressListener(
         this._handleInitialEvent,
         e
       )
     })
 
-    this._removeInitialEventListener = () => {
-      removeMouseDownListener()
-      removeTouchStartListener()
+    this._onInitialEventListener = {
+      remove() {
+        mouseDownListener.remove()
+        touchStartListener.remove()
+      },
     }
   }
 
@@ -273,7 +279,7 @@ class Selection {
 
     switch (e.type) {
       case 'mousedown':
-        this._removeEndListener = addEventListener(
+        this._onEndListener = addEventListener(
           'mouseup',
           this._handleTerminatingEvent
         )
@@ -281,18 +287,18 @@ class Selection {
           'keydown',
           this._handleTerminatingEvent
         )
-        this._removeMoveListener = addEventListener(
+        this._onMoveListener = addEventListener(
           'mousemove',
           this._handleMoveEvent
         )
         break
       case 'touchstart':
         this._handleMoveEvent(e)
-        this._removeEndListener = addEventListener(
+        this._onEndListener = addEventListener(
           'touchend',
           this._handleTerminatingEvent
         )
-        this._removeMoveListener = addEventListener(
+        this._onMoveListener = addEventListener(
           'touchmove',
           this._handleMoveEvent
         )
@@ -307,8 +313,8 @@ class Selection {
 
     this.selecting = false
 
-    this._removeEndListener && this._removeEndListener()
-    this._removeMoveListener && this._removeMoveListener()
+    this._onEndListener && this._onEndListener.remove()
+    this._onMoveListener && this._onMoveListener.remove()
 
     if (!this._initialEventData) return
 
@@ -411,8 +417,8 @@ class Selection {
     let { x, y, isTouch } = this._initialEventData
     return (
       !isTouch &&
-      (Math.abs(pageX - x) <= clickTolerance &&
-        Math.abs(pageY - y) <= clickTolerance)
+      Math.abs(pageX - x) <= clickTolerance &&
+        Math.abs(pageY - y) <= clickTolerance
     )
   }
 }
@@ -454,15 +460,17 @@ export function objectsCollide(nodeA, nodeB, tolerance = 0) {
     bottom: bBottom = bTop,
   } = getBoundsForNode(nodeB)
 
-  return !// 'a' bottom doesn't touch 'b' top
-  (
-    aBottom - tolerance < bTop ||
-    // 'a' top doesn't touch 'b' bottom
-    aTop + tolerance > bBottom ||
-    // 'a' right doesn't touch 'b' left
-    aRight - tolerance < bLeft ||
-    // 'a' left doesn't touch 'b' right
-    aLeft + tolerance > bRight
+  return !(
+    // 'a' bottom doesn't touch 'b' top
+    (
+      aBottom - tolerance < bTop ||
+      // 'a' top doesn't touch 'b' bottom
+      aTop + tolerance > bBottom ||
+      // 'a' right doesn't touch 'b' left
+      aRight - tolerance < bLeft ||
+      // 'a' left doesn't touch 'b' right
+      aLeft + tolerance > bRight
+    )
   )
 }
 
