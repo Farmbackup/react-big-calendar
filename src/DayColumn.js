@@ -115,7 +115,11 @@ class DayColumn extends React.Component {
       accessors,
       localizer,
       getters: { dayProp, ...getters },
-      components: { eventContainerWrapper: EventContainer, ...components },
+      components: {
+        eventContainerWrapper: EventContainer,
+        timeIndicatorChildren: TimeIndicatorChildren,
+        ...components
+      },
     } = this.props
 
     let { slotMetrics } = this
@@ -164,12 +168,21 @@ class DayColumn extends React.Component {
             <span>{localizer.format(selectDates, 'selectRangeFormat')}</span>
           </div>
         )}
-        {isNow && this.intervalTriggered && (
-          <div
-            className="rbc-current-time-indicator"
-            style={{ top: `${this.state.timeIndicatorPosition}%` }}
-          />
-        )}
+        {isNow &&
+          this.intervalTriggered &&
+          (TimeIndicatorChildren ? (
+            <div
+              className="rbc-current-time-indicator"
+              style={{ top: `${this.state.timeIndicatorPosition}%` }}
+            >
+              <TimeIndicatorChildren />
+            </div>
+          ) : (
+            <div
+              className="rbc-current-time-indicator"
+              style={{ top: `${this.state.timeIndicatorPosition}%` }}
+            />
+          ))}
       </div>
     )
   }
