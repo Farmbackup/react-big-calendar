@@ -494,9 +494,9 @@ class Calendar extends React.Component {
      * ```
      */
 	slotPropGetter: PropTypes.func,
-	
+
 	/**
-	 * Optionally provide a function that returns an object of props to be applied 
+	 * Optionally provide a function that returns an object of props to be applied
 	 * to the time-slot group node. Useful to dynamically change the sizing of time nodes.
 	 * ```js
 	 * () => { style?: Object }
@@ -538,6 +538,10 @@ class Calendar extends React.Component {
      * Determines how far down the scroll pane is initially scrolled down.
      */
     scrollToTime: PropTypes.instanceOf(Date),
+    /*
+    * Auto scroll ability for focusing current time indicator
+    */
+    scrollToNowAuto: PropTypes.bool,
 
     /**
      * Specify a specific culture code for the Calendar.

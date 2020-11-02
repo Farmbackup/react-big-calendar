@@ -105,7 +105,7 @@ export default class TimeGrid extends Component {
     })
   }
 
-  renderEvents(range, events, now) {
+  renderEvents(range, events, now, contentRef) {
     let {
       min,
       max,
@@ -113,10 +113,18 @@ export default class TimeGrid extends Component {
       accessors,
       localizer,
       dayLayoutAlgorithm,
+      scrollToNowAuto
     } = this.props
 
     const resources = this.memoizedResources(this.props.resources, accessors)
     const groupedEvents = resources.groupEvents(events)
+
+    const scrollToNowAutoRunner = (position) => {
+      if(scrollToNowAuto && contentRef) {
+        const content = this.contentRef.current
+        content.scrollTop = position / 100 * content.clientWidth;
+      }
+    }
 
     return resources.map(([id, resource], i) =>
       range.map((date, jj) => {
@@ -142,6 +150,7 @@ export default class TimeGrid extends Component {
             date={date}
             events={daysEvents}
             dayLayoutAlgorithm={dayLayoutAlgorithm}
+            scrollToNowAutoRunner={scrollToNowAutoRunner}
           />
         )
       })
@@ -243,7 +252,7 @@ export default class TimeGrid extends Component {
             className="rbc-time-gutter"
             getters={getters}
           />
-          {this.renderEvents(range, rangeEvents, getNow())}
+          {this.renderEvents(range, rangeEvents, getNow(), this.contentRef)}
         </div>
       </div>
     )
@@ -318,6 +327,7 @@ TimeGrid.propTypes = {
   getNow: PropTypes.func.isRequired,
 
   scrollToTime: PropTypes.instanceOf(Date),
+  scrollToNowAuto: PropTypes.bool,
   showMultiDayTimes: PropTypes.bool,
 
   rtl: PropTypes.bool,
