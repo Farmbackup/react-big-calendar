@@ -105,7 +105,7 @@ export default class TimeGrid extends Component {
     })
   }
 
-  renderEvents(range, events, now) {
+  renderEvents(range, events, now, contentRef) {
     let {
       min,
       max,
@@ -118,6 +118,12 @@ export default class TimeGrid extends Component {
 
     const resources = this.memoizedResources(this.props.resources, accessors)
     const groupedEvents = resources.groupEvents(events)
+
+    const scrollToNowAutoRunner = (position) => {
+      if(scrollToNowAuto && contentRef) {
+        contentRef.scrollTop = position / 100 * contentRef.clientWidth;
+      }
+    }
 
     return resources.map(([id, resource], i) =>
       range.map((date, jj) => {
@@ -143,7 +149,7 @@ export default class TimeGrid extends Component {
             date={date}
             events={daysEvents}
             dayLayoutAlgorithm={dayLayoutAlgorithm}
-            scrollToNowAuto={scrollToNowAuto}
+            scrollToNowAutoRunner={scrollToNowAutoRunner}
           />
         )
       })
@@ -245,7 +251,7 @@ export default class TimeGrid extends Component {
             className="rbc-time-gutter"
             getters={getters}
           />
-          {this.renderEvents(range, rangeEvents, getNow())}
+          {this.renderEvents(range, rangeEvents, getNow(), this.contentRef)}
         </div>
       </div>
     )
