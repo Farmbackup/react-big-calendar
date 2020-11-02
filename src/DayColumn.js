@@ -94,13 +94,17 @@ class DayColumn extends React.Component {
   }
 
   positionTimeIndicator() {
-    const { min, max, getNow } = this.props
+    const { min, max, getNow, scrollToNowAuto } = this.props
     const current = getNow()
 
     if (current >= min && current <= max) {
       const top = this.slotMetrics.getCurrentTimePosition(current)
       this.intervalTriggered = true
       this.setState({ timeIndicatorPosition: top })
+
+      if(scrollToNowAuto && this.rbcCurrentTimeIndicator) {
+        this.rbcCurrentTimeIndicator.scrollIntoView({behavior: 'smooth'})
+      }
     } else {
       this.clearTimeIndicatorInterval()
     }
@@ -173,12 +177,14 @@ class DayColumn extends React.Component {
           (TimeIndicatorChildren ? (
             <div
               className="rbc-current-time-indicator"
+              ref={(el) => { this.rbcCurrentTimeIndicator = el; }}
               style={{ top: `${this.state.timeIndicatorPosition}%` }}
             >
               <TimeIndicatorChildren resource={resource} />
             </div>
           ) : (
             <div
+              ref={(el) => { this.rbcCurrentTimeIndicator = el; }}
               className="rbc-current-time-indicator"
               style={{ top: `${this.state.timeIndicatorPosition}%` }}
             />

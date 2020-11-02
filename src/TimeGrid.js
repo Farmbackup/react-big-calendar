@@ -113,6 +113,7 @@ export default class TimeGrid extends Component {
       accessors,
       localizer,
       dayLayoutAlgorithm,
+      scrollToNowAuto
     } = this.props
 
     const resources = this.memoizedResources(this.props.resources, accessors)
@@ -142,6 +143,7 @@ export default class TimeGrid extends Component {
             date={date}
             events={daysEvents}
             dayLayoutAlgorithm={dayLayoutAlgorithm}
+            scrollToNowAuto={scrollToNowAuto}
           />
         )
       })
@@ -318,6 +320,7 @@ TimeGrid.propTypes = {
   getNow: PropTypes.func.isRequired,
 
   scrollToTime: PropTypes.instanceOf(Date),
+  scrollToNowAuto: PropTypes.bool,
   showMultiDayTimes: PropTypes.bool,
 
   rtl: PropTypes.bool,
