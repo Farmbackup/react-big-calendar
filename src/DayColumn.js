@@ -94,7 +94,7 @@ class DayColumn extends React.Component {
   }
 
   positionTimeIndicator() {
-    const { min, max, getNow, scrollToNowAutoRunner } = this.props
+    const { min, max, getNow, scrollToNowAutoRunner} = this.props
     const current = getNow()
 
     if (current >= min && current <= max) {

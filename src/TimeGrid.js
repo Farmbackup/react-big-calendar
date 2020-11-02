@@ -121,8 +121,8 @@ export default class TimeGrid extends Component {
 
     const scrollToNowAutoRunner = (position) => {
       if(scrollToNowAuto && contentRef) {
-        const content = this.contentRef.current
-        content.scrollTop = position / 100 * content.clientWidth;
+        const content = contentRef.current
+        content.scrollTop = content.clientHeight ? position / 100 * content.clientHeight : content.scrollTop;
       }
     }
 
