@@ -52,7 +52,7 @@
     "prepublishOnly": "npm run build",
     "prettier": "prettier '**/*js' !examples/bundle.js '!lib/**' --write ",
     "precommit": "lint-staged",
-    "prepare": "npm run build"
+    "prepare": "if test \"$NODE_ENV\" != \"production\" ; then npm run build ; fi "
   },
   "lint-staged": {
     "src/**/*.js": "eslint",
